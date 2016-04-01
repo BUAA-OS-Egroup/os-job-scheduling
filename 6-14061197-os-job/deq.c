@@ -7,7 +7,7 @@
 #include "job.h"
 
 /* 
- * 命令语法格式
+ * 鍛戒护璇硶鏍煎紡
  *     deq jid
  */
 void usage()
@@ -35,11 +35,11 @@ int main(int argc,char *argv[])
 	strcpy(deqcmd.data,*++argv);
 	printf("jid %s\n",deqcmd.data);
 
-	if((fd=open("/tmp/server",O_WRONLY))<0)
-		error_sys("deq open fifo failed");
+	if((fd=open(mFIFO,O_WRONLY))<0)
+		error_sys("deq: open fifo failed");
 
 	if(write(fd,&deqcmd,DATALEN)<0)
-		error_sys("deq write failed");
+		error_sys("deq: write failed");
 
 	close(fd);
 	return 0;

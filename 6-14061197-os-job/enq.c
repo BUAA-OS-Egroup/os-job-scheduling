@@ -7,7 +7,7 @@
 #include "job.h"
 #define DEBUG
 /* 
- * 命令语法格式
+ * 鍛戒护璇硶鏍煎紡
  *     enq [-p num] e_file args
  */
 void usage()
@@ -20,7 +20,7 @@ void usage()
 
 int main(int argc,char *argv[])
 {
-	int p=0;
+	int p=0,flag=0;
 	int fd;
 	char c,*offset;
 	struct jobcmd enqcmd;
@@ -33,21 +33,35 @@ int main(int argc,char *argv[])
 
 	while(--argc>0 && (*++argv)[0]=='-')
 	{
+		//printf("%s\n", *argv);
 		while(c=*++argv[0])
-			switch(c)
 		{
-			case 'p':p=atoi(*(++argv));
-			argc--;
-			break;
-			default:
-				printf("Illegal option %c\n",c);
-				return 1;
+			switch(c)
+			{
+				case 'p':
+					if (argc<2){
+						printf("%s\n", "-p: priority required");	
+						return 1;		
+					}
+					p=atoi(*(++argv));
+					argc--;
+					flag=1;
+					break;
+				default:
+					printf("enq: Illegal option %c\n",c);
+					return 1;
+			}
+			if (flag) 
+			{
+				flag=0;
+				break;
+			}
 		}
 	}
 
 	if(p<0||p>3)
 	{
-		printf("invalid priority:must between 0 and 3\n");
+		printf("enq: invalid priority:must between 0 and 3\n");
 		return 1;
 	}
 
@@ -56,6 +70,12 @@ int main(int argc,char *argv[])
 	enqcmd.owner=getuid();
 	enqcmd.argnum=argc;
 	offset=enqcmd.data;
+
+	if (argc<=0)
+	{
+		printf("%s\n", "enq: command required");	
+		return 1;
+	}
 
 	while (argc-->0)
 	{
@@ -69,16 +89,18 @@ int main(int argc,char *argv[])
 		printf("enqcmd cmdtype\t%d\n"
 			"enqcmd owner\t%d\n"
 			"enqcmd defpri\t%d\n"
+			"enqcmd argc\t%d\n"
 			"enqcmd data\t%s\n",
-			enqcmd.type,enqcmd.owner,enqcmd.defpri,enqcmd.data);
+			enqcmd.type,enqcmd.owner,enqcmd.defpri,enqcmd.argnum,enqcmd.data);
 
     #endif 
 
-		if((fd=open("/tmp/server",O_WRONLY))<0)
-			error_sys("enq open fifo failed");
+		if((fd=open(mFIFO,O_WRONLY))<0)
+//			if (mkfifo(mFIFO,FILE_MODE)<0||(fd=open(mFIFO,O_WRONLY))<0)
+				error_sys("enq: open fifo failed");
 
 		if(write(fd,&enqcmd,DATALEN)<0)
-			error_sys("enq write failed");
+			error_sys("enq: write failed");
 
 		close(fd);
 		return 0;

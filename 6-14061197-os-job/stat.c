@@ -31,11 +31,11 @@ int main(int argc,char *argv[])
 	statcmd.owner=getuid();
 	statcmd.argnum=0;
 
-	if((fd=open("/tmp/server",O_WRONLY))<0)
-		error_sys("stat open fifo failed");
+	if((fd=open(mFIFO,O_WRONLY))<0)
+		error_sys("stat: open fifo failed");
 
 	if(write(fd,&statcmd,DATALEN)<0)
-		error_sys("stat write failed");
+		error_sys("stat: write failed");
 
 	close(fd);
 	return 0;
