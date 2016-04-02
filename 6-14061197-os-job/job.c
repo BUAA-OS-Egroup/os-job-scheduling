@@ -43,7 +43,6 @@ void scheduler()
 	struct jobinfo *newjob=NULL;
 	struct jobcmd cmd;
 	int  count = 0;
-	P(&mutex);
 	bzero(&cmd,DATALEN);
 	if((count = read(fifo,&cmd,DATALEN))<0)
 		error_sys("read fifo failed");
@@ -56,11 +55,7 @@ void scheduler()
 		printf("no data read\n");
 #endif
 
-	/* 更新等待队列中的作业 */
-	if (sch_mode==0) updateall();
-	if (sch_mode==1) updateall2();
 
-	V(&mutex);
 	switch(cmd.type){
 	case ENQ:
 		do_enq(newjob,cmd);
@@ -74,15 +69,16 @@ void scheduler()
 	default:
 		break;
 	}
-	P(&mutex);
 
+	/* 更新等待队列中的作业 */
+	if (sch_mode==0) updateall();
+	if (sch_mode==1) updateall2();
 	/* 选择高优先级作业 */
 	if (sch_mode==0) next = jobselect();
 	if (sch_mode==1) next = jobselect2();
 	/* 作业切换 */
 	if (sch_mode==0) jobswitch();
 	if (sch_mode==1) jobswitch2();
-	V(&mutex);
 }
 
 int allocjid()
@@ -124,7 +120,7 @@ void updateall2()
 	for(pre=NULL, p = pq[i]; p != NULL;pre=p, p = p->next){
 		p->job->wait_time += duration;
 		if(p->job->wait_time >= upgrade_time && p->job->curpri < N){
-			++p->job->curpri;
+			++(p->job->curpri);
 			p->job->wait_time = 0;
 		} 
 		if ((p->job->curpri-1)>i) {
@@ -138,9 +134,12 @@ void updateall2()
 				o->next=p->next;
 				p=o;
 			}
-			push_back(&pq[p->job->curpri-1],tmp);
+			push_back(&pq[tmp->job->curpri-1],tmp);
 		}
 	}
+	// printf("%s\n", pq[0]!=NULL?"YES":"NO");
+	// printf("%s\n", pq[1]!=NULL?"YES":"NO");
+	// printf("%s\n", pq[2]!=NULL?"YES":"NO");
 }
 
 void updateall()
@@ -186,12 +185,16 @@ struct waitqueue* jobselect()
 struct waitqueue* jobselect2()
 {
 	struct waitqueue *p,*prev,*select,*selectprev;
-	int highest = -1, i;
+	int highest, i, lowest;
+	if (current!=NULL&&current->job->s_time<slice[get_pri(current->job->curpri)]) highest=current->job->curpri;
+	else highest=-1;
+
+	lowest=current!=NULL?get_pri(current->job->curpri):0;
 
 	select = NULL;
 	selectprev = NULL;
 
-	for (i=N-1;i>=0;--i)
+	for (i=N-1;i>=lowest;--i)
 	if(pq[i]){
 		/* 遍历等待队列中的作业，找到优先级最高的作业 */
 		for(prev = NULL, p = pq[i]; p != NULL; prev = p,p = p->next)
@@ -200,10 +203,13 @@ struct waitqueue* jobselect2()
 				selectprev = prev;
 				highest = p->job->curpri;
 			}
-		if (selectprev!=NULL) selectprev->next = select->next;
-		else pq[i] = select->next;
-		select->next = NULL;
-		break;
+		if (select!=NULL)
+		{
+			if (selectprev!=NULL) selectprev->next = select->next;
+			else pq[i] = select->next;
+			select->next = NULL;
+			break;
+		}
 	}
 	return select;
 }
@@ -232,6 +238,7 @@ void jobswitch2()
 		current = NULL;
 	}
 
+	//printf("%s\n", next?"havenxt":"nonxt");
 
 	if(next == NULL && current == NULL) /* 没有作业要运行 */
 
@@ -247,11 +254,11 @@ void jobswitch2()
 		return;
 	}
 	else if (next != NULL && current != NULL) { /* 切换作业 */
-		if (current->job->curpri>next->job->curpri||current->job->curpri==next->job->curpri&&current->job->s_time<slice[get_pri(current->job->curpri)])
-		{
-			push_back(&pq[get_pri(next->job->curpri)],next);			
-			return;
-		}
+		// if (current->job->curpri>next->job->curpri||current->job->curpri==next->job->curpri&&current->job->s_time<slice[get_pri(current->job->curpri)])
+		// {
+		// 	push_back(&pq[get_pri(next->job->curpri)],next);			
+		// 	return;
+		// }
 
 		printf("switch to Pid: %d\n",next->job->pid);
 		kill(current->job->pid,SIGSTOP);
@@ -335,15 +342,19 @@ void sig_handler(int sig,siginfo_t *info,void *notused)
 {
 	int status;
 	int ret;
-
+//	P(&mutex);
 	switch (sig) {
 case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
 	scheduler();
+//	V(&mutex);
 	return;
 case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
 	ret = waitpid(-1,&status,WNOHANG);
 	if (ret == 0)
+	{
+//		V(&mutex);
 		return;
+	}
 	if(WIFEXITED(status)){
 		current->job->state = DONE;
 		printf("normal termation, exit status = %d\n",WEXITSTATUS(status));
@@ -352,8 +363,10 @@ case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
 	}else if (WIFSTOPPED(status)){
 		printf("child stopped, signal number = %d\n",WSTOPSIG(status));
 	}
+//	V(&mutex);
 	return;
 	default:
+//		V(&mutex);
 		return;
 	}
 }
@@ -366,7 +379,6 @@ void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 	char **arglist;
 	sigset_t zeromask;
 
-	P(&mutex);
 
 	sigemptyset(&zeromask);
 
@@ -440,11 +452,12 @@ void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 			printf("exec failed\n");
 		exit(1);
 	}else{
+//		V(&mutex);
 		sleep(1000);
+//		P(&mutex);
 		newjob->pid = pid;
 	}
 
-	V(&mutex);
 }
 
 void do_deq(struct jobcmd deqcmd)
@@ -452,7 +465,6 @@ void do_deq(struct jobcmd deqcmd)
 	int deqid,i;
 	struct waitqueue *p,*prev,*select,*selectprev;
 
-	P(&mutex);
 
 	deqid = atoi(deqcmd.data);
 
@@ -487,6 +499,8 @@ void do_deq(struct jobcmd deqcmd)
 				{
 					if (selectprev!=NULL) selectprev->next = select->next;
 					else pq[i]=select->next;
+					printf("%s\n", "del_succ");
+					break;
 				}
 		}
 		if(select){
@@ -501,7 +515,6 @@ void do_deq(struct jobcmd deqcmd)
 		}
 	}
 
-	V(&mutex);
 }
 
 void do_stat(struct jobcmd statcmd)
@@ -510,7 +523,6 @@ void do_stat(struct jobcmd statcmd)
 	char timebuf[BUFLEN];
 	int cnt=0, i;
 
-	P(&mutex);
 	/*
 	*打印所有作业的统计信息:
 	*1.作业ID
@@ -554,7 +566,6 @@ void do_stat(struct jobcmd statcmd)
 			"READY");
 	}
 	printf("-Total: %d jobs\n", cnt);
-	V(&mutex);
 }
 
 void dispose()
@@ -617,5 +628,6 @@ int main()
 	puts("");
 	if(remove(mFIFO)<0)
 		error_sys("remove failed");
+	printf("%s\n", "bye");
 	return 0;
 }
