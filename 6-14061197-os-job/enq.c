@@ -20,7 +20,7 @@ void usage()
 
 int main(int argc,char *argv[])
 {
-	int p=0,flag=0;
+	int p=1,flag=0;
 	int fd;
 	char c,*offset;
 	struct jobcmd enqcmd;
@@ -59,9 +59,9 @@ int main(int argc,char *argv[])
 		}
 	}
 
-	if(p<0||p>3)
+	if(p<1||p>3)
 	{
-		printf("enq: invalid priority:must between 0 and 3\n");
+		printf("enq: invalid priority:must between 1 and 3\n");
 		return 1;
 	}
 
