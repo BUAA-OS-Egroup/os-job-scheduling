@@ -47,7 +47,7 @@ void scheduler()
 	if((count = read(fifo,&cmd,DATALEN))<0)
 		error_sys("read fifo failed");
 #ifdef DEBUG
-
+	printf("reading command.\n");
 	if(count){
 		printf("cmd cmdtype\t%d\ncmd defpri\t%d\ncmd data\t%s\n",cmd.type,cmd.defpri,cmd.data);
 	}
@@ -59,6 +59,7 @@ void scheduler()
 	switch(cmd.type){
 	case ENQ:
 		do_enq(newjob,cmd);
+
 		break;
 	case DEQ:
 		do_deq(cmd);
@@ -262,7 +263,9 @@ void jobswitch2()
 
 		printf("switch to Pid: %d\n",next->job->pid);
 		kill(current->job->pid,SIGSTOP);
-		current->job->curpri = current->job->defpri;
+		//current->job->curpri = current->job->defpri;
+		--current->job->curpri;
+		if (current->job->curpri<current->job->defpri) current->job->curpri=current->job->defpri;
 		current->job->wait_time = 0;
 		current->job->state = READY;
 
@@ -316,7 +319,10 @@ void jobswitch()
 
 		printf("switch to Pid: %d\n",next->job->pid);
 		kill(current->job->pid,SIGSTOP);
-		current->job->curpri = current->job->defpri;
+		//current->job->curpri = current->job->defpri;
+		--current->job->curpri;
+		if (current->job->curpri<current->job->defpri) current->job->curpri=current->job->defpri;
+
 		current->job->wait_time = 0;
 		current->job->state = READY;
 
@@ -346,6 +352,9 @@ void sig_handler(int sig,siginfo_t *info,void *notused)
 	switch (sig) {
 case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
 	scheduler();
+	#ifdef DEBUG
+		printf("SIGVTALRM Received.\n");
+	#endif
 //	V(&mutex);
 	return;
 case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
