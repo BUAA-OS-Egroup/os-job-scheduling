@@ -24,6 +24,7 @@ struct waitqueue *pq[N]={NULL,NULL,NULL};
 const int slice[N]={5000,2000,1000};
 const int duration=500, upgrade_time=10000;
 struct waitqueue *next=NULL,*current =NULL;
+char fifobuf[1024];
 
 
 void P(int *x)
@@ -77,7 +78,7 @@ updateall();
 #ifdef DEBUG
 	printf("Execute stat!\n");
 #endif
-		do_stat(cmd);
+		do_stat(&cmd);
 		break;
 	default:
 		break;
@@ -125,9 +126,10 @@ void updateall2()
 {
 //#define DEBUG
 #ifdef DEBUG
-	struct jobcmd cmd1;
-	do_stat(cmd1);
-#endif///////////////////////////////////////task6
+	//struct jobcmd cmd1;
+	do_stat(NULL);
+#endif
+///////////////////////////////////////task6
 
 	struct waitqueue *p, *pre, *tmp, *o;
 	int i;
@@ -166,17 +168,19 @@ void updateall2()
 	// printf("%s\n", pq[1]!=NULL?"YES":"NO");
 	// printf("%s\n", pq[2]!=NULL?"YES":"NO");
 #ifdef DEBUG
-	struct jobcmd cmd2;
-	do_stat(cmd2);
-#endif///////////////////////////////////////task6
+	//struct jobcmd cmd2;
+	do_stat(NULL);
+#endif
+///////////////////////////////////////task6
 }
 
 void updateall()
 {
 #ifdef DEBUG
-	struct jobcmd cmd1;
-	do_stat(cmd1);
-#endif///////////////////////////////////////task6
+	//struct jobcmd cmd1;
+	do_stat(NULL);
+#endif
+///////////////////////////////////////task6
 	struct waitqueue *p;
 	/* 更新作业运行时间 */
 	if(current)
@@ -191,9 +195,10 @@ void updateall()
 		}
 	}
 #ifdef DEBUG
-	struct jobcmd cmd2;
-	do_stat(cmd2);
-#endif///////////////////////////////////////task6
+	//struct jobcmd cmd2;
+	do_stat(NULL);
+#endif
+///////////////////////////////////////task6
 #undef DEBUG
 }
 
@@ -562,11 +567,11 @@ void do_deq(struct jobcmd deqcmd)
 
 }
 
-void do_stat(struct jobcmd statcmd)
+void do_stat(struct jobcmd* statcmd)
 {
 	struct waitqueue *p;
 	char timebuf[BUFLEN];
-	int cnt=0, i;
+	int cnt=0, i, fd;
 
 	/*
 	*打印所有作业的统计信息:
@@ -579,13 +584,15 @@ void do_stat(struct jobcmd statcmd)
 	*7.作业状态
 	*/
 
+	int offset=0;
+
 	/* 打印信息头部 */
-	printf("JID\tPID\tOID\tRTIME\tWTIME\tPRI\tCTIME\t\t\t\tSTATUS\n");
+	offset+=sprintf(fifobuf+offset,"JID\tPID\tOID\tRTIME\tWTIME\tPRI\tCTIME\t\t\t\tSTATUS\n");
 	if(current){
 		++cnt;
 		strcpy(timebuf,ctime(&(current->job->create_time)));
 		timebuf[strlen(timebuf)-1]='\0';
-		printf("%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n",
+		offset+=sprintf(fifobuf+offset,"%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n",
 			current->job->jid,
 			current->job->pid,
 			current->job->ownerid,
@@ -600,7 +607,7 @@ void do_stat(struct jobcmd statcmd)
 		++cnt;
 		strcpy(timebuf,ctime(&(p->job->create_time)));
 		timebuf[strlen(timebuf)-1]='\0';
-		printf("%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n",
+		offset+=sprintf(fifobuf+offset,"%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n",
 			p->job->jid,
 			p->job->pid,
 			p->job->ownerid,
@@ -610,7 +617,23 @@ void do_stat(struct jobcmd statcmd)
 			timebuf,
 			"READY");
 	}
-	printf("-Total: %d jobs\n", cnt);
+	offset+=sprintf(fifobuf+offset,"-Total: %d jobs\n", cnt);
+	fifobuf[offset]='\0';
+	printf("%s", fifobuf);
+
+	if (statcmd!=NULL)
+	{
+		if((fd=open(sFIFO,O_WRONLY))<0)
+//			if (mkfifo(mFIFO,FILE_MODE)<0||(fd=open(mFIFO,O_WRONLY))<0)
+				error_sys("enq: open fifo failed");
+
+		if(write(fd,fifobuf,offset)<0)
+			error_sys("enq: write failed");
+		if(write(fd,"$",1)<0)
+			error_sys("enq: write failed");
+
+		close(fd);		
+	}
 }
 
 void dispose()

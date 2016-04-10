@@ -17,6 +17,7 @@
 #define BUFLEN 100
 #define GLOBALFILE "screendump"
 #define mFIFO "/tmp/job_sch"
+#define sFIFO "/tmp/job_sta"
 #define FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
 enum jobstate{
@@ -62,7 +63,7 @@ void add_queue(struct jobinfo *job);
 void del_queue(struct jobinfo *job);
 void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd);
 void do_deq(struct jobcmd deqcmd);
-void do_stat(struct jobcmd statcmd);
+void do_stat(struct jobcmd* statcmd);
 void updateall();
 struct waitqueue* jobselect();
 void jobswitch();
