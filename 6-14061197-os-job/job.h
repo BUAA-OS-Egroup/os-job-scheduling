@@ -8,11 +8,11 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#ifndef DEBUG
-#define DEBUG
-#endif
+//#ifndef DEBUG
+//#define DEBUG
+//#endif
 
-#undef DEBUG
+//#undef DEBUG
 
 #define BUFLEN 100
 #define GLOBALFILE "screendump"

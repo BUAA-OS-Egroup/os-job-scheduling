@@ -47,24 +47,36 @@ void scheduler()
 	if((count = read(fifo,&cmd,DATALEN))<0)
 		error_sys("read fifo failed");
 #ifdef DEBUG
-	printf("reading command.\n");
+	printf("Reading whether other process send command!\n");
 	if(count){
 		printf("cmd cmdtype\t%d\ncmd defpri\t%d\ncmd data\t%s\n",cmd.type,cmd.defpri,cmd.data);
 	}
 	else
-		printf("no data read\n");
+		printf("no data read\n");//different from PPT
 #endif
 
+#ifdef DEBUG
+	printf("Update jobs in wait queue!\n");
+#endif
+updateall();
 
 	switch(cmd.type){
 	case ENQ:
+#ifdef DEBUG
+	printf("Execute enq!\n");
+#endif
 		do_enq(newjob,cmd);
-
 		break;
 	case DEQ:
+#ifdef DEBUG
+	printf("Execute deq!\n");
+#endif
 		do_deq(cmd);
 		break;
 	case STAT:
+#ifdef DEBUG
+	printf("Execute stat!\n");
+#endif
 		do_stat(cmd);
 		break;
 	default:
@@ -75,9 +87,15 @@ void scheduler()
 	if (sch_mode==0) updateall();
 	if (sch_mode==1) updateall2();
 	/* 选择高优先级作业 */
+#ifdef DEBUG
+	printf("Select which job to run next!\n");
+#endif
 	if (sch_mode==0) next = jobselect();
 	if (sch_mode==1) next = jobselect2();
 	/* 作业切换 */
+#ifdef DEBUG
+	printf("Switch to the next job!\n");
+#endif
 	if (sch_mode==0) jobswitch();
 	if (sch_mode==1) jobswitch2();
 }
@@ -105,6 +123,12 @@ void push_back(struct waitqueue**h, struct waitqueue* x)
 
 void updateall2()
 {
+//#define DEBUG
+#ifdef DEBUG
+	struct jobcmd cmd1;
+	do_stat(cmd1);
+#endif///////////////////////////////////////task6
+
 	struct waitqueue *p, *pre, *tmp, *o;
 	int i;
 
@@ -141,12 +165,19 @@ void updateall2()
 	// printf("%s\n", pq[0]!=NULL?"YES":"NO");
 	// printf("%s\n", pq[1]!=NULL?"YES":"NO");
 	// printf("%s\n", pq[2]!=NULL?"YES":"NO");
+#ifdef DEBUG
+	struct jobcmd cmd2;
+	do_stat(cmd2);
+#endif///////////////////////////////////////task6
 }
 
 void updateall()
 {
+#ifdef DEBUG
+	struct jobcmd cmd1;
+	do_stat(cmd1);
+#endif///////////////////////////////////////task6
 	struct waitqueue *p;
-
 	/* 更新作业运行时间 */
 	if(current)
 		current->job->run_time += 1; /* 加1代表1000ms */
@@ -159,6 +190,11 @@ void updateall()
 			p->job->wait_time = 0;
 		}
 	}
+#ifdef DEBUG
+	struct jobcmd cmd2;
+	do_stat(cmd2);
+#endif///////////////////////////////////////task6
+#undef DEBUG
 }
 
 struct waitqueue* jobselect()
@@ -352,9 +388,9 @@ void sig_handler(int sig,siginfo_t *info,void *notused)
 	switch (sig) {
 case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
 	scheduler();
-	#ifdef DEBUG
-		printf("SIGVTALRM Received.\n");
-	#endif
+#ifdef DEBUG
+	printf("SIGVTALRM RECEIVED!.\n");
+#endif
 //	V(&mutex);
 	return;
 case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
@@ -589,9 +625,9 @@ int main()
 	struct stat statbuf;
 	struct sigaction newact,oldact1,oldact2;
 
-	#ifdef DEBUG
-		printf("Debug Mode\n");
-	#endif
+#ifdef DEBUG
+	printf("DEBUG IS OPEN!\n");
+#endif
 
 	if(stat(mFIFO,&statbuf)==0){
 		/* 如果FIFO文件存在,删掉 */
