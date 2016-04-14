@@ -238,6 +238,11 @@ void updateall()
 
 struct waitqueue* jobselect()
 {
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_9
 	struct waitqueue *p,*prev,*select,*selectprev;
 	int highest = -1;
 
@@ -255,11 +260,21 @@ struct waitqueue* jobselect()
 			else (*head) = select->next;
 			select->next = NULL;
 	}
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_9
 	return select;
 }
 
 struct waitqueue* jobselect2()
 {
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_9
 	struct waitqueue *p,*prev,*select,*selectprev;
 	int highest, i, lowest;
 	if (current!=NULL&&current->job->s_time<slice[get_pri(current->job->curpri)]) highest=current->job->curpri;
@@ -287,6 +302,11 @@ struct waitqueue* jobselect2()
 			break;
 		}
 	}
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_9
 	return select;
 }
 
@@ -297,6 +317,11 @@ int get_pri(int x)
 
 void jobswitch2()
 {
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 	struct waitqueue *p;
 	int i;
 
@@ -317,7 +342,11 @@ void jobswitch2()
 	//printf("%s\n", next?"havenxt":"nonxt");
 
 	if(next == NULL && current == NULL) /* 没有作业要运行 */
-
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	else if (next != NULL && current == NULL){ /* 开始新的作业 */
 
@@ -327,6 +356,11 @@ void jobswitch2()
 		current->job->s_time = 0;
 		current->job->state = RUNNING;
 		kill(current->job->pid,SIGCONT);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}
 	else if (next != NULL && current != NULL) { /* 切换作业 */
@@ -353,14 +387,29 @@ void jobswitch2()
 		current->job->state = RUNNING;
 		current->job->wait_time = 0;
 		kill(current->job->pid,SIGCONT);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}else{ /* next == NULL且current != NULL，不切换 */
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}
 }
 
 void jobswitch()
 {
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 	struct waitqueue *p;
 	int i;
 
@@ -379,7 +428,11 @@ void jobswitch()
 	}
 
 	if(next == NULL && current == NULL) /* 没有作业要运行 */
-
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	else if (next != NULL && current == NULL){ /* 开始新的作业 */
 
@@ -388,6 +441,11 @@ void jobswitch()
 		next = NULL;
 		current->job->state = RUNNING;
 		kill(current->job->pid,SIGCONT);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}
 	else if (next != NULL && current != NULL){ /* 切换作业 */
@@ -413,8 +471,18 @@ void jobswitch()
 		current->job->state = RUNNING;
 		current->job->wait_time = 0;
 		kill(current->job->pid,SIGCONT);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}else{ /* next == NULL且current != NULL，不切换 */
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_8
 		return;
 	}
 }
@@ -433,10 +501,21 @@ case SIGVTALRM: /* 到达计时器所设置的计时间隔 */
 //	V(&mutex);
 	return;
 case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
+
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_10
 	ret = waitpid(-1,&status,WNOHANG);
 	if (ret == 0)
 	{
 //		V(&mutex);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_10
 		return;
 	}
 	if(WIFEXITED(status)){
@@ -448,6 +527,11 @@ case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
 		printf("child stopped, signal number = %d\n",WSTOPSIG(status));
 	}
 //	V(&mutex);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_10
 	return;
 	default:
 //		V(&mutex);
@@ -457,7 +541,7 @@ case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
 
 void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	//do_stat(NULL);
 #endif
@@ -546,7 +630,7 @@ void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 //		P(&mutex);
 		newjob->pid = pid;
 	}
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	//do_stat(NULL);
 #endif
