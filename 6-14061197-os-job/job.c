@@ -59,7 +59,7 @@ void scheduler()
 #ifdef DEBUG
 	printf("Update jobs in wait queue!\n");
 #endif
-updateall();
+//updateall();
 
 	switch(cmd.type){
 	case ENQ:
@@ -199,7 +199,6 @@ void updateall()
 	do_stat(NULL);
 #endif
 ///////////////////////////////////////task6
-#undef DEBUG
 }
 
 struct waitqueue* jobselect()

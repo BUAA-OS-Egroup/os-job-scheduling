@@ -36,6 +36,16 @@ int main(int argc,char *argv[])
 	statcmd.owner=getuid();
 	statcmd.argnum=0;
 
+    #ifdef DEBUG
+		printf("enqcmd cmdtype\t%d\n"
+			"enqcmd owner\t%d\n"
+			"enqcmd argc\t%d\n"
+			"enqcmd data\t%s\n",
+			enqcmd.type,enqcmd.owner,enqcmd.argnum,enqcmd.data);
+
+    #endif 
+	
+
 	if(stat(sFIFO,&statbuf)==0){
 		/* 如果FIFO文件存在,删掉 */
 		if(remove(sFIFO)<0)

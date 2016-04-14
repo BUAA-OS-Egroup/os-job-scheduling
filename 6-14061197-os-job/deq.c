@@ -33,7 +33,14 @@ int main(int argc,char *argv[])
 	deqcmd.argnum=1;
 
 	strcpy(deqcmd.data,*++argv);
-	printf("jid %s\n",deqcmd.data);
+    #ifdef DEBUG
+		printf("enqcmd cmdtype\t%d\n"
+			"enqcmd owner\t%d\n"
+			"enqcmd argc\t%d\n"
+			"enqcmd data\t%s\n",
+			enqcmd.type,enqcmd.owner,enqcmd.argnum,enqcmd.data);
+
+    #endif 
 
 	if((fd=open(mFIFO,O_WRONLY))<0)
 		error_sys("deq: open fifo failed");
