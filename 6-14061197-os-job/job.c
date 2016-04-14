@@ -66,19 +66,54 @@ void scheduler()
 #ifdef DEBUG
 	printf("Execute enq!\n");
 #endif
+
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		do_enq(newjob,cmd);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		break;
+
 	case DEQ:
 #ifdef DEBUG
 	printf("Execute deq!\n");
 #endif
+
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		do_deq(cmd);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		break;
+
 	case STAT:
 #ifdef DEBUG
 	printf("Execute stat!\n");
 #endif
+
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		do_stat(&cmd);
+//#define DEBUG
+#ifdef DEBUG
+	do_stat(NULL);
+#endif
+#undef DEBUG//////////////////////////////task_7
 		break;
 	default:
 		break;
@@ -422,6 +457,11 @@ case SIGCHLD: /* 子进程结束时传送给父进程的信号 */
 
 void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 {
+#define DEBUG
+#ifdef DEBUG
+	//do_stat(NULL);
+#endif
+#undef DEBUG//////////task_7
 	struct waitqueue *newnode,*p;
 	int i=0,pid;
 	char *offset,*argvec,*q;
@@ -506,6 +546,11 @@ void do_enq(struct jobinfo *newjob,struct jobcmd enqcmd)
 //		P(&mutex);
 		newjob->pid = pid;
 	}
+#define DEBUG
+#ifdef DEBUG
+	//do_stat(NULL);
+#endif
+#undef DEBUG/////////////////task_7
 
 }
 
@@ -563,7 +608,6 @@ void do_deq(struct jobcmd deqcmd)
 			select=NULL;
 		}
 	}
-
 }
 
 void do_stat(struct jobcmd* statcmd)
@@ -635,6 +679,7 @@ void do_stat(struct jobcmd* statcmd)
 	}
 }
 
+
 void dispose()
 {
 	siginfo=0;
@@ -650,6 +695,7 @@ int main()
 #ifdef DEBUG
 	printf("DEBUG IS OPEN!\n");
 #endif
+
 
 	if(stat(mFIFO,&statbuf)==0){
 		/* 如果FIFO文件存在,删掉 */
