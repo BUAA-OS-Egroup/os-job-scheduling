@@ -8,9 +8,9 @@
 #include <signal.h>
 #include <sys/types.h>
 
-//#ifndef DEBUG
-//#define DEBUG
-//#endif
+// #ifndef DEBUG
+// #define DEBUG
+// #endif
 
 //#undef DEBUG
 

@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
 			"enqcmd owner\t%d\n"
 			"enqcmd argc\t%d\n"
 			"enqcmd data\t%s\n",
-			enqcmd.type,enqcmd.owner,enqcmd.argnum,enqcmd.data);
+			statcmd.type,statcmd.owner,statcmd.argnum,statcmd.data);
 
     #endif 
 	
