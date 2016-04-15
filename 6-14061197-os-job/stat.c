@@ -7,7 +7,7 @@
 #include "job.h"
 
 /* 
- * 命令语法格式
+ * 
  *     stat
  */
 
@@ -47,7 +47,7 @@ int main(int argc,char *argv[])
 	
 
 	if(stat(sFIFO,&statbuf)==0){
-		/* 如果FIFO文件存在,删掉 */
+		/*  */
 		if(remove(sFIFO)<0)
 			error_sys("remove failed");
 	}

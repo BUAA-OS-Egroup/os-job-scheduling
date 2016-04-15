@@ -651,7 +651,7 @@ void do_deq(struct jobcmd deqcmd)
 #endif
 
 	/*current jodid==deqid,终止当前作业*/
-	if (current && current->job->jid ==deqid){
+	if (current && current->job->jid ==deqid&&deqcmd.owner==current->job->ownerid){
 		printf("teminate current job\n");
 		kill(current->job->pid,SIGKILL);
 		for(i=0;(current->job->cmdarg)[i]!=NULL;i++){
@@ -668,7 +668,7 @@ void do_deq(struct jobcmd deqcmd)
 		selectprev=NULL;
 		for (i=N-1;i>=0;--i) {
 			for(prev = NULL,p = pq[i];p!=NULL;prev = p,p = p->next)
-				if(p->job->jid==deqid){
+				if(p->job->jid==deqid&&deqcmd.owner==p->job->ownerid){
 					select = p;
 					selectprev = prev;
 					break;
